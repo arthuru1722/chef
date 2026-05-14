@@ -132,6 +132,11 @@ a {
     gap: 4px;
     padding: 10px 0;
     border-bottom: 1px solid var(--line);
+}
+
+.saved-item a {
+    display: grid;
+    gap: 4px;
     color: var(--ink);
     text-decoration: none;
 }
@@ -142,6 +147,24 @@ a {
 label span {
     color: var(--muted);
     font-size: 12px;
+}
+
+.delete-contract-form {
+    margin: 4px 0 0;
+}
+
+.delete-contract-form button {
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #9b3d33;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.delete-contract-form button:hover {
+    text-decoration: underline;
 }
 
 .form-area {

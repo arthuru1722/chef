@@ -14,6 +14,7 @@
         </div>
         <div class="top-actions">
             <a class="ghost-button" href="{{ url_for('contracts.index') }}">Novo</a>
+            <button class="ghost-button" id="clear-draft" type="button">Limpar rascunho</button>
             <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="ghost-button" type="submit">Sair</button>
@@ -27,10 +28,16 @@
             <h2>Salvos</h2>
             <div class="saved-list">
                 {% for contract in contracts %}
-                    <a class="saved-item" href="{{ url_for('contracts.edit_contract', contract_id=contract['id']) }}">
-                        <strong>{{ contract["titulo"] }}</strong>
-                        <span>{{ contract["updated_at"].replace("T", " ") }}</span>
-                    </a>
+                    <div class="saved-item">
+                        <a href="{{ url_for('contracts.edit_contract', contract_id=contract['id']) }}">
+                            <strong>{{ contract["titulo"] }}</strong>
+                            <span>{{ contract["updated_at"].replace("T", " ") }}</span>
+                        </a>
+                        <form class="delete-contract-form" method="post" action="{{ url_for('contracts.delete_contract_route', contract_id=contract['id']) }}" data-contract-title="{{ contract['titulo'] }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit">Excluir</button>
+                        </form>
+                    </div>
                 {% else %}
                     <p class="empty">Nenhum contrato salvo ainda.</p>
                 {% endfor %}

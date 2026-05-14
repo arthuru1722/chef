@@ -4,7 +4,7 @@ from flask import Blueprint, abort, redirect, render_template, request, send_fil
 
 from config import IMAGE_DIR
 from data.fields import FIELD_GROUPS
-from database import get_contract, list_contracts, save_contract
+from database import delete_contract, get_contract, list_contracts, save_contract
 from pdf.generator import build_contract_pdf, contract_download_name
 from services.auth import login_required, validate_csrf
 from services.contracts import values_from_row
@@ -78,6 +78,15 @@ def save_contract_route():
     image_ref = selected_image_ref(request.form, request.files, current_ref=current_image)
     saved_id = save_contract(values, image_ref, contract_id=contract_id)
     return redirect(url_for("contracts.edit_contract", contract_id=saved_id))
+
+
+@contracts_bp.route("/contrato/<int:contract_id>/excluir", methods=["POST"])
+@login_required
+def delete_contract_route(contract_id):
+    validate_csrf()
+    _contract_or_404(contract_id)
+    delete_contract(contract_id)
+    return redirect(url_for("contracts.index"))
 
 
 @contracts_bp.route("/pdf/<int:contract_id>")

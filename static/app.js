@@ -194,6 +194,26 @@ document.querySelector("#add-material")?.addEventListener("click", () => {
     saveDraft();
 });
 
+document.querySelector("#clear-draft")?.addEventListener("click", () => {
+    const message = contractId === "new"
+        ? "Limpar o rascunho deste contrato novo?"
+        : "Limpar alteracoes nao salvas deste contrato e recarregar os dados salvos?";
+    if (!window.confirm(message)) {
+        return;
+    }
+    localStorage.removeItem(draftKey);
+    window.location.reload();
+});
+
+document.querySelectorAll(".delete-contract-form").forEach((deleteForm) => {
+    deleteForm.addEventListener("submit", (event) => {
+        const title = deleteForm.dataset.contractTitle || "este contrato";
+        if (!window.confirm(`Excluir ${title}? Essa acao nao pode ser desfeita.`)) {
+            event.preventDefault();
+        }
+    });
+});
+
 form?.addEventListener("input", () => {
     renderPreview();
     saveDraft();

@@ -124,6 +124,11 @@ def get_contract(contract_id):
         return conn.execute("SELECT * FROM contratos WHERE id = ?", (contract_id,)).fetchone()
 
 
+def delete_contract(contract_id):
+    with connect() as conn:
+        conn.execute("DELETE FROM contratos WHERE id = ?", (contract_id,))
+
+
 def save_contract(values, image_ref, contract_id=None):
     now = datetime.now().isoformat(timespec="seconds")
     title = values.get("nomeContratante") or "Contrato sem nome"
