@@ -1,0 +1,1 @@
+from pdf.contract_template import criar_paragrafos

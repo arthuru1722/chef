@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contratos Cheffy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">Gerador de contratos</p>
+            <h1>Contratos Cheffy</h1>
+        </div>
+        <div class="top-actions">
+            <a class="ghost-button" href="{{ url_for('contracts.index') }}">Novo</a>
+            <button class="primary-button" form="contract-form" type="submit">Salvar contrato</button>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <aside class="sidebar">
+            <h2>Salvos</h2>
+            <div class="saved-list">
+                {% for contract in contracts %}
+                    <a class="saved-item" href="{{ url_for('contracts.edit_contract', contract_id=contract['id']) }}">
+                        <strong>{{ contract["titulo"] }}</strong>
+                        <span>{{ contract["updated_at"].replace("T", " ") }}</span>
+                    </a>
+                {% else %}
+                    <p class="empty">Nenhum contrato salvo ainda.</p>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <form id="contract-form" class="form-area" method="post" action="{{ url_for('contracts.save_contract_route') }}" enctype="multipart/form-data">
+            <input type="hidden" name="contract_id" value="{{ contract_id }}">
+            <input type="hidden" name="material_count" id="material-count" value="{{ values['materiais']|length }}">
+
+            {% for title, fields in field_groups %}
+                <section class="form-section">
+                    <h2>{{ title }}</h2>
+                    {% if title == "Evento" %}
+                        <div class="form-subgrid">
+                            <div class="input-group date-group">
+                                <span>Data do evento</span>
+                                <div>
+                                    <input name="diaEvento" value="{{ values.get('diaEvento', '') }}" autocomplete="off" placeholder="Dia">
+                                    <input name="mesEvento" value="{{ values.get('mesEvento', '') }}" autocomplete="off" placeholder="Mes">
+                                    <input name="anoEvento" value="{{ values.get('anoEvento', '') }}" autocomplete="off" placeholder="Ano">
+                                </div>
+                            </div>
+                            <div class="input-group time-group">
+                                <span>Horario do evento</span>
+                                <div>
+                                    <input name="horaEvento" value="{{ values.get('horaEvento', '') }}" autocomplete="off" placeholder="Hora">
+                                    <input name="minutoEvento" value="{{ values.get('minutoEvento', '') }}" autocomplete="off" placeholder="Min">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if title == "Servico" %}
+                        <div class="form-subgrid">
+                            <div class="input-group time-group">
+                                <span>Inicio do servico</span>
+                                <div>
+                                    <input name="inicioHora" value="{{ values.get('inicioHora', '') }}" autocomplete="off" placeholder="Hora">
+                                    <input name="inicioMinuto" value="{{ values.get('inicioMinuto', '') }}" autocomplete="off" placeholder="Min">
+                                </div>
+                            </div>
+                            <div class="input-group time-group">
+                                <span>Termino do servico</span>
+                                <div>
+                                    <input name="terminoHora" value="{{ values.get('terminoHora', '') }}" autocomplete="off" placeholder="Hora">
+                                    <input name="terminoMinuto" value="{{ values.get('terminoMinuto', '') }}" autocomplete="off" placeholder="Min">
+                                </div>
+                            </div>
+                            <div class="input-group time-group">
+                                <span>Chegada ao local</span>
+                                <div>
+                                    <input name="chegadaHora" value="{{ values.get('chegadaHora', '') }}" autocomplete="off" placeholder="Hora">
+                                    <input name="chegadaMinuto" value="{{ values.get('chegadaMinuto', '') }}" autocomplete="off" placeholder="Min">
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="field-grid">
+                        {% for key, label in fields %}
+                            {% if key not in ["diaEvento", "mesEvento", "anoEvento", "horaEvento", "minutoEvento", "inicioHora", "inicioMinuto", "terminoHora", "terminoMinuto", "chegadaHora", "chegadaMinuto", "valorTotalNumero", "valorTotalExtenso", "tipoPagamento", "valorExtraNumero", "parcela1Numero", "parcela1Extenso", "parcela1Dia", "parcela1Mes", "parcela1Ano", "parcela2Numero", "parcela2Extenso", "parcela2Dia", "parcela2Mes", "parcela2Ano", "dataFinalDia", "dataFinalMesExtenso", "dataFinalAnoUltimoDigito"] %}
+                                <label>
+                                    <span>{{ label }}</span>
+                                    <input name="{{ key }}" value="{{ values.get(key, '') }}" autocomplete="off">
+                                </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if title == "Pagamento" %}
+                        <div class="payment-stack">
+                            <div class="payment-block">
+                                <h3>Valor total</h3>
+                                <div class="field-grid">
+                                    <label>
+                                        <span>Valor total</span>
+                                        <input name="valorTotalNumero" value="{{ values.get('valorTotalNumero', '') }}" autocomplete="off">
+                                    </label>
+                                    <label>
+                                        <span>Valor total por extenso</span>
+                                        <input name="valorTotalExtenso" value="{{ values.get('valorTotalExtenso', '') }}" autocomplete="off">
+                                    </label>
+                                    <label>
+                                        <span>Tipo de pagamento</span>
+                                        <input name="tipoPagamento" value="{{ values.get('tipoPagamento', '') }}" autocomplete="off">
+                                    </label>
+                                    <label>
+                                        <span>Valor por convidado extra</span>
+                                        <input name="valorExtraNumero" value="{{ values.get('valorExtraNumero', '') }}" autocomplete="off">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="payment-grid">
+                                <div class="payment-block">
+                                    <h3>1a parcela</h3>
+                                    <div class="field-grid single">
+                                        <label>
+                                            <span>Valor</span>
+                                            <input name="parcela1Numero" value="{{ values.get('parcela1Numero', '') }}" autocomplete="off">
+                                        </label>
+                                        <label>
+                                            <span>Valor por extenso</span>
+                                            <input name="parcela1Extenso" value="{{ values.get('parcela1Extenso', '') }}" autocomplete="off">
+                                        </label>
+                                    </div>
+                                    <div class="input-group date-group">
+                                        <span>Data da 1a parcela</span>
+                                        <div>
+                                            <input name="parcela1Dia" value="{{ values.get('parcela1Dia', '') }}" autocomplete="off" placeholder="Dia">
+                                            <input name="parcela1Mes" value="{{ values.get('parcela1Mes', '') }}" autocomplete="off" placeholder="Mes">
+                                            <input name="parcela1Ano" value="{{ values.get('parcela1Ano', '') }}" autocomplete="off" placeholder="Ano">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="payment-block">
+                                    <h3>2a parcela</h3>
+                                    <div class="field-grid single">
+                                        <label>
+                                            <span>Valor</span>
+                                            <input name="parcela2Numero" value="{{ values.get('parcela2Numero', '') }}" autocomplete="off">
+                                        </label>
+                                        <label>
+                                            <span>Valor por extenso</span>
+                                            <input name="parcela2Extenso" value="{{ values.get('parcela2Extenso', '') }}" autocomplete="off">
+                                        </label>
+                                    </div>
+                                    <div class="input-group date-group">
+                                        <span>Data da 2a parcela</span>
+                                        <div>
+                                            <input name="parcela2Dia" value="{{ values.get('parcela2Dia', '') }}" autocomplete="off" placeholder="Dia">
+                                            <input name="parcela2Mes" value="{{ values.get('parcela2Mes', '') }}" autocomplete="off" placeholder="Mes">
+                                            <input name="parcela2Ano" value="{{ values.get('parcela2Ano', '') }}" autocomplete="off" placeholder="Ano">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if title == "Finalizacao" %}
+                        <div class="input-group date-group signature-date">
+                            <span>Data da assinatura</span>
+                            <div>
+                                <input name="dataFinalDia" value="{{ values.get('dataFinalDia', '') }}" autocomplete="off" placeholder="Dia">
+                                <input name="dataFinalMesExtenso" value="{{ values.get('dataFinalMesExtenso', '') }}" autocomplete="off" placeholder="Mes por extenso">
+                                <input name="dataFinalAnoUltimoDigito" value="{{ values.get('dataFinalAnoUltimoDigito', '') }}" autocomplete="off" placeholder="Ultimo digito">
+                            </div>
+                        </div>
+                    {% endif %}
+                </section>
+            {% endfor %}
+
+            <section class="form-section">
+                <h2>Materiais</h2>
+                <div id="materials" class="materials">
+                    {% for material in values["materiais"] %}
+                        <div class="material-row">
+                            <label>
+                                <span>Material</span>
+                                <input name="material_nome_{{ loop.index0 }}" value="{{ material.get('nome', '') }}" autocomplete="off">
+                            </label>
+                            <label>
+                                <span>Custo de reposicao</span>
+                                <input name="material_custo_{{ loop.index0 }}" value="{{ material.get('custo', '') }}" autocomplete="off">
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="ghost-button small" id="add-material" type="button">Adicionar material</button>
+            </section>
+
+            <section class="form-section">
+                <h2>Regras e imagem</h2>
+                <div class="field-grid compact">
+                    <label>
+                        <span>Credito em caso de desistencia</span>
+                        <input name="antecedenciaCredito" value="{{ values.get('antecedenciaCredito', '') }}" autocomplete="off">
+                    </label>
+                    <label>
+                        <span>Aviso minimo de desistencia</span>
+                        <input name="antecedenciaDesistencia" value="{{ values.get('antecedenciaDesistencia', '') }}" autocomplete="off">
+                    </label>
+                    <label class="checkbox-line">
+                        <input type="checkbox" name="autorizaImagem" {% if values.get("autorizaImagem") %}checked{% endif %}>
+                        <span>Contratante autoriza uso de imagem</span>
+                    </label>
+                </div>
+
+                <div class="image-options">
+                    <label class="radio-line">
+                        <input type="radio" name="image_mode" value="none" {% if not selected_image %}checked{% endif %}>
+                        <span>Sem anexo de imagem</span>
+                    </label>
+                    <label class="radio-line">
+                        <input type="radio" name="image_mode" value="existing" {% if selected_image %}checked{% endif %}>
+                        <span>Usar imagem da pasta</span>
+                    </label>
+                    <select name="existing_image">
+                        <option value="">Escolha uma imagem</option>
+                        {% for image in images %}
+                            <option value="{{ image.value }}" data-url="{{ image.url }}" {% if image.value == selected_image %}selected{% endif %}>{{ image.label }}</option>
+                        {% endfor %}
+                    </select>
+                    <label class="radio-line">
+                        <input type="radio" name="image_mode" value="upload">
+                        <span>Enviar nova imagem</span>
+                    </label>
+                    <input type="file" name="new_image" accept="image/png,image/jpeg">
+                </div>
+                <div class="image-preview-wrap" id="image-preview-wrap">
+                    <img id="image-preview" alt="Previa da imagem selecionada">
+                    <span id="image-preview-empty">Nenhuma imagem selecionada</span>
+                </div>
+            </section>
+
+            <div class="mobile-save">
+                <button class="primary-button" type="submit">Salvar contrato</button>
+                {% if contract_id %}
+                    <a class="ghost-button" href="{{ url_for('contracts.pdf_contract', contract_id=contract_id) }}">Baixar PDF</a>
+                {% endif %}
+            </div>
+        </form>
+
+        <aside class="preview-panel">
+            <div class="preview-head">
+                <h2>Previa</h2>
+                <span id="draft-status">Rascunho salvo neste navegador</span>
+            </div>
+            {% if contract_id %}
+                <a class="ghost-button pdf-link" href="{{ url_for('contracts.pdf_contract', contract_id=contract_id) }}">Baixar PDF</a>
+            {% endif %}
+            <article id="preview" class="paper-preview"></article>
+        </aside>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
