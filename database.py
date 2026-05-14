@@ -4,12 +4,14 @@ import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
 
-from config import DB_PATH
+from werkzeug.security import generate_password_hash
+
+from config import ADMIN_PASSWORD, ADMIN_USER, DB_PATH
 
 
 @contextmanager
 def connect():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
@@ -47,6 +49,62 @@ def init_db():
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                last_login_at TEXT
+            )
+            """
+        )
+        if ADMIN_PASSWORD and not _has_users(conn):
+            _create_user(conn, ADMIN_USER, ADMIN_PASSWORD)
+
+
+def _has_users(conn):
+    row = conn.execute("SELECT 1 FROM usuarios LIMIT 1").fetchone()
+    return row is not None
+
+
+def _create_user(conn, username, password):
+    now = datetime.now().isoformat(timespec="seconds")
+    cursor = conn.execute(
+        """
+        INSERT INTO usuarios (username, password_hash, created_at)
+        VALUES (?, ?, ?)
+        """,
+        (username, generate_password_hash(password), now),
+    )
+    return cursor.lastrowid
+
+
+def has_users():
+    with connect() as conn:
+        return _has_users(conn)
+
+
+def create_user(username, password):
+    with connect() as conn:
+        return _create_user(conn, username, password)
+
+
+def get_user_by_username(username):
+    with connect() as conn:
+        return conn.execute("SELECT * FROM usuarios WHERE username = ?", (username,)).fetchone()
+
+
+def get_user(user_id):
+    with connect() as conn:
+        return conn.execute("SELECT * FROM usuarios WHERE id = ?", (user_id,)).fetchone()
+
+
+def mark_user_login(user_id):
+    now = datetime.now().isoformat(timespec="seconds")
+    with connect() as conn:
+        conn.execute("UPDATE usuarios SET last_login_at = ? WHERE id = ?", (now, user_id))
 
 
 def list_contracts():

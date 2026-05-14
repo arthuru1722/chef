@@ -1,4 +1,5 @@
 import os
+import secrets
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -10,3 +11,7 @@ DEFAULT_IMAGE = os.path.join(BASE_DIR, "BuffentInfantilCompleto.jpeg")
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg"}
 MAX_UPLOAD_SIZE = 16 * 1024 * 1024
 API_TOKEN = os.environ.get("CHEFFY_API_TOKEN", "")
+SECRET_KEY = os.environ.get("CHEFFY_SECRET_KEY", secrets.token_hex(32))
+COOKIE_SECURE = os.environ.get("CHEFFY_COOKIE_SECURE", "0") == "1"
+ADMIN_USER = os.environ.get("CHEFFY_ADMIN_USER", "admin")
+ADMIN_PASSWORD = os.environ.get("CHEFFY_ADMIN_PASSWORD", "")

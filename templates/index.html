@@ -14,6 +14,10 @@
         </div>
         <div class="top-actions">
             <a class="ghost-button" href="{{ url_for('contracts.index') }}">Novo</a>
+            <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="ghost-button" type="submit">Sair</button>
+            </form>
             <button class="primary-button" form="contract-form" type="submit">Salvar contrato</button>
         </div>
     </header>
@@ -34,6 +38,7 @@
         </aside>
 
         <form id="contract-form" class="form-area" method="post" action="{{ url_for('contracts.save_contract_route') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="contract_id" value="{{ contract_id }}">
             <input type="hidden" name="material_count" id="material-count" value="{{ values['materiais']|length }}">
 

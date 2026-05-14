@@ -4,6 +4,7 @@ from flask import Blueprint, abort, jsonify, request
 
 from config import API_TOKEN
 from database import get_contract, list_contract_rows, update_contract_values
+from services.auth import is_logged_in
 from services.contracts import (
     contract_summary,
     event_time_payload,
@@ -18,6 +19,10 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 def require_api_token(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
+        if is_logged_in():
+            return view(*args, **kwargs)
+        if not API_TOKEN:
+            return jsonify({"error": "api_token_not_configured"}), 401
         if API_TOKEN:
             auth = request.headers.get("Authorization", "")
             token = auth.removeprefix("Bearer ").strip()

@@ -2,11 +2,14 @@
 
 Todas as rotas retornam JSON e ficam em `/api`.
 
-Se a variavel de ambiente `CHEFFY_API_TOKEN` estiver definida, envie:
+Para uso por app externo, defina a variavel de ambiente `CHEFFY_API_TOKEN` e envie:
 
 ```http
 Authorization: Bearer seu-token
 ```
+
+Se a API for chamada pelo navegador depois do login no painel, a sessao tambem autoriza as rotas.
+Sem token e sem sessao, a API responde `401`.
 
 ## Contratos
 

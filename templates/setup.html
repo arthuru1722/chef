@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configurar acesso - Contratos Cheffy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-panel">
+            <p class="eyebrow">Primeiro acesso</p>
+            <h1>Criar administrador</h1>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="auth-alert">{{ messages[0] }}</div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="post" class="auth-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label>
+                    <span>Usuario</span>
+                    <input name="username" autocomplete="username" required autofocus>
+                </label>
+                <label>
+                    <span>Senha</span>
+                    <input name="password" type="password" autocomplete="new-password" minlength="10" required>
+                </label>
+                <label>
+                    <span>Confirmar senha</span>
+                    <input name="confirm_password" type="password" autocomplete="new-password" minlength="10" required>
+                </label>
+                <button class="primary-button" type="submit">Criar acesso</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

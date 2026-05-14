@@ -6,6 +6,7 @@ from config import IMAGE_DIR
 from data.fields import FIELD_GROUPS
 from database import get_contract, list_contracts, save_contract
 from pdf.generator import build_contract_pdf, contract_download_name
+from services.auth import login_required, validate_csrf
 from services.contracts import values_from_row
 from services.forms import empty_values, values_from_form
 from services.images import (
@@ -43,11 +44,13 @@ def _render_form(values, selected_image="", contract_id=""):
 
 
 @contracts_bp.route("/")
+@login_required
 def index():
     return _render_form(empty_values())
 
 
 @contracts_bp.route("/contrato/<int:contract_id>")
+@login_required
 def edit_contract(contract_id):
     row = _contract_or_404(contract_id)
     return _render_form(
@@ -58,7 +61,9 @@ def edit_contract(contract_id):
 
 
 @contracts_bp.route("/salvar", methods=["POST"])
+@login_required
 def save_contract_route():
+    validate_csrf()
     values = values_from_form(request.form)
     contract_id = request.form.get("contract_id") or None
     current_image = ""
@@ -76,6 +81,7 @@ def save_contract_route():
 
 
 @contracts_bp.route("/pdf/<int:contract_id>")
+@login_required
 def pdf_contract(contract_id):
     row = _contract_or_404(contract_id)
     values = _contract_values(row)
@@ -90,6 +96,7 @@ def pdf_contract(contract_id):
 
 
 @contracts_bp.route("/uploaded-images/<int:image_id>")
+@login_required
 def uploaded_image(image_id):
     image = send_uploaded_image(image_id)
     return send_file(
@@ -100,5 +107,6 @@ def uploaded_image(image_id):
 
 
 @contracts_bp.route("/images/<path:filename>")
+@login_required
 def image_file(filename):
     return send_from_directory(IMAGE_DIR, filename)

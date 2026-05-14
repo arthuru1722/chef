@@ -62,6 +62,10 @@ h2 {
     gap: 10px;
 }
 
+.logout-form {
+    margin: 0;
+}
+
 button,
 a {
     font: inherit;
@@ -365,6 +369,41 @@ select:focus {
 
 .mobile-save {
     display: none;
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.auth-shell {
+    width: min(100%, 420px);
+}
+
+.auth-panel {
+    display: grid;
+    gap: 20px;
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 18px 50px rgba(37, 33, 28, 0.08);
+}
+
+.auth-form {
+    display: grid;
+    gap: 14px;
+}
+
+.auth-alert {
+    padding: 10px 12px;
+    border: 1px solid #d99a7a;
+    border-radius: 6px;
+    background: #fff3ed;
+    color: #713b26;
+    font-size: 14px;
 }
 
 @media (max-width: 1180px) {
