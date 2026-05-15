@@ -291,6 +291,46 @@ document.querySelectorAll(".delete-contract-form").forEach((deleteForm) => {
     });
 });
 
+function setStatusButtonState(statusForm, isDone) {
+    const input = statusForm.querySelector("input[type='hidden'][name]:not([name='csrf_token']):not([name='next'])");
+    const button = statusForm.querySelector(".status-chip");
+    if (!input || !button) {
+        return;
+    }
+    input.value = isDone ? "0" : "1";
+    button.classList.toggle("done", isDone);
+    button.textContent = isDone ? statusForm.dataset.labelOn : statusForm.dataset.labelOff;
+}
+
+document.querySelectorAll(".status-form").forEach((statusForm) => {
+    statusForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const button = statusForm.querySelector(".status-chip");
+        const statusKey = statusForm.dataset.statusKey;
+        button?.setAttribute("disabled", "disabled");
+
+        try {
+            const response = await fetch(statusForm.action, {
+                method: "POST",
+                body: new FormData(statusForm),
+                headers: {"X-Requested-With": "fetch"},
+                credentials: "same-origin",
+            });
+            if (!response.ok) {
+                statusForm.submit();
+                return;
+            }
+            const payload = await response.json();
+            const isDone = Boolean(payload.status?.[statusKey]);
+            setStatusButtonState(statusForm, isDone);
+        } catch {
+            statusForm.submit();
+        } finally {
+            button?.removeAttribute("disabled");
+        }
+    });
+});
+
 function setSidebarOpen(isOpen) {
     document.body.classList.toggle("sidebar-open", isOpen);
     openSidebar?.setAttribute("aria-expanded", String(isOpen));

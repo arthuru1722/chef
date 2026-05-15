@@ -270,6 +270,11 @@ label span {
     color: var(--accent-dark);
 }
 
+.status-chip:disabled {
+    cursor: progress;
+    opacity: 0.68;
+}
+
 .delete-contract-form button {
     min-height: 28px;
     padding: 0;

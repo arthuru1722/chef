@@ -57,7 +57,7 @@
             </details>
             <div class="saved-list">
                 {% for contract in contracts %}
-                    <div class="saved-item">
+                    <div class="saved-item" data-contract-id="{{ contract['id'] }}">
                         <a href="{{ url_for('contracts.edit_contract', contract_id=contract['id']) }}">
                             <strong>{{ contract["titulo"] }}</strong>
                             {% if contract["signature_label"] %}
@@ -72,7 +72,7 @@
                             {% endif %}
                         </a>
                         <div class="status-actions">
-                            <form method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}">
+                            <form class="status-form" method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}" data-status-key="festaRealizada" data-label-on="Festa feita" data-label-off="Festa pendente">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="next" value="{{ request.full_path }}">
                                 <input type="hidden" name="festaRealizada" value="{{ '0' if contract['event_done'] else '1' }}">
@@ -80,13 +80,13 @@
                                     {% if contract["event_done"] %}Festa feita{% else %}Festa pendente{% endif %}
                                 </button>
                             </form>
-                            <form method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}">
+                            <form class="status-form" method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}" data-status-key="parcela1Paga" data-label-on="P1" data-label-off="P1">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="next" value="{{ request.full_path }}">
                                 <input type="hidden" name="parcela1Paga" value="{{ '0' if contract['payment1_paid'] else '1' }}">
                                 <button class="status-chip {% if contract['payment1_paid'] %}done{% endif %}" type="submit">P1</button>
                             </form>
-                            <form method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}">
+                            <form class="status-form" method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}" data-status-key="parcela2Paga" data-label-on="P2" data-label-off="P2">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="next" value="{{ request.full_path }}">
                                 <input type="hidden" name="parcela2Paga" value="{{ '0' if contract['payment2_paid'] else '1' }}">

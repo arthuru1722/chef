@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, send_from_directory, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for
 
 from config import IMAGE_DIR
 from data.fields import FIELD_GROUPS
@@ -108,6 +108,15 @@ def update_contract_status_route(contract_id):
         if key in request.form:
             values[key] = request.form.get(key) == "1"
     update_contract_values(contract_id, values)
+    if request.headers.get("X-Requested-With") == "fetch":
+        return jsonify({
+            "ok": True,
+            "status": {
+                "festaRealizada": bool(values.get("festaRealizada")),
+                "parcela1Paga": bool(values.get("parcela1Paga")),
+                "parcela2Paga": bool(values.get("parcela2Paga")),
+            },
+        })
     return redirect(_safe_next())
 
 
