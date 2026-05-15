@@ -26,12 +26,36 @@
     <main class="workspace">
         <aside class="sidebar">
             <h2>Salvos</h2>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="inline-alert">{{ messages[0] }}</div>
+                {% endif %}
+            {% endwith %}
+            <a class="export-link" href="{{ url_for('contracts.export_contracts_csv') }}">Baixar banco em CSV</a>
+            <details class="import-panel">
+                <summary>Importar planilha</summary>
+                <form class="import-form" method="post" action="{{ url_for('contracts.import_contracts_route') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label>
+                        <span>Arquivo CSV ou Excel</span>
+                        <input type="file" name="spreadsheet" accept=".xlsx,.csv">
+                    </label>
+                    <div class="import-actions">
+                        <button class="ghost-button small" type="submit">Importar</button>
+                        <a class="ghost-button small" href="{{ url_for('contracts.import_template') }}">Baixar modelo</a>
+                    </div>
+                </form>
+            </details>
             <div class="saved-list">
                 {% for contract in contracts %}
                     <div class="saved-item">
                         <a href="{{ url_for('contracts.edit_contract', contract_id=contract['id']) }}">
                             <strong>{{ contract["titulo"] }}</strong>
-                            <span>{{ contract["updated_at"].replace("T", " ") }}</span>
+                            {% if contract["signature_label"] %}
+                                <span>Assinatura: {{ contract["signature_label"] }}</span>
+                            {% else %}
+                                <span>Sem data de assinatura</span>
+                            {% endif %}
                         </a>
                         <form class="delete-contract-form" method="post" action="{{ url_for('contracts.delete_contract_route', contract_id=contract['id']) }}" data-contract-title="{{ contract['titulo'] }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

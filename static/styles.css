@@ -127,6 +127,57 @@ a {
     margin-top: 14px;
 }
 
+.export-link {
+    display: block;
+    margin-top: 14px;
+    color: var(--accent-dark);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.export-link:hover {
+    text-decoration: underline;
+}
+
+.import-panel {
+    margin-top: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.import-panel summary {
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.import-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.import-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.import-actions .ghost-button.small {
+    width: 100%;
+    margin-top: 0;
+}
+
+.inline-alert {
+    margin-top: 12px;
+    padding: 9px 10px;
+    border: 1px solid #d8c27c;
+    border-radius: 6px;
+    background: #fff8db;
+    color: #69551d;
+    font-size: 13px;
+}
+
 .saved-item {
     display: grid;
     gap: 4px;

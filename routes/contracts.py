@@ -1,13 +1,13 @@
 from io import BytesIO
 
-from flask import Blueprint, abort, redirect, render_template, request, send_file, send_from_directory, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_file, send_from_directory, url_for
 
 from config import IMAGE_DIR
 from data.fields import FIELD_GROUPS
-from database import delete_contract, get_contract, list_contracts, save_contract
+from database import delete_contract, get_contract, list_contract_rows, save_contract
 from pdf.generator import build_contract_pdf, contract_download_name
 from services.auth import login_required, validate_csrf
-from services.contracts import values_from_row
+from services.contracts import sorted_contract_rows, values_from_row
 from services.forms import empty_values, values_from_form
 from services.images import (
     list_image_options,
@@ -15,6 +15,13 @@ from services.images import (
     resolve_image_source,
     selected_image_ref,
     send_uploaded_image,
+)
+from services.importer import (
+    allowed_spreadsheet,
+    build_contracts_csv,
+    build_template_csv,
+    build_template_workbook,
+    parse_spreadsheet,
 )
 
 contracts_bp = Blueprint("contracts", __name__)
@@ -36,7 +43,7 @@ def _render_form(values, selected_image="", contract_id=""):
         "index.html",
         field_groups=FIELD_GROUPS,
         values=values,
-        contracts=list_contracts(),
+        contracts=sorted_contract_rows(list_contract_rows()),
         images=list_image_options(),
         selected_image=normalize_image_ref(selected_image),
         contract_id=contract_id,
@@ -78,6 +85,67 @@ def save_contract_route():
     image_ref = selected_image_ref(request.form, request.files, current_ref=current_image)
     saved_id = save_contract(values, image_ref, contract_id=contract_id)
     return redirect(url_for("contracts.edit_contract", contract_id=saved_id))
+
+
+@contracts_bp.route("/importar", methods=["POST"])
+@login_required
+def import_contracts_route():
+    validate_csrf()
+    spreadsheet = request.files.get("spreadsheet")
+    if not spreadsheet or not spreadsheet.filename:
+        flash("Escolha um arquivo .xlsx ou .csv para importar.")
+        return redirect(url_for("contracts.index"))
+    if not allowed_spreadsheet(spreadsheet.filename):
+        flash("Formato invalido. Use .xlsx ou .csv.")
+        return redirect(url_for("contracts.index"))
+
+    try:
+        contracts = parse_spreadsheet(spreadsheet)
+    except Exception:
+        flash("Nao consegui ler a planilha. Confira se a primeira linha tem os nomes das colunas.")
+        return redirect(url_for("contracts.index"))
+
+    for values in contracts:
+        save_contract(values, image_ref="")
+
+    flash(f"{len(contracts)} contrato(s) importado(s).")
+    return redirect(url_for("contracts.index"))
+
+
+@contracts_bp.route("/importar/modelo")
+@login_required
+def import_template():
+    try:
+        workbook = build_template_workbook()
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+        return send_file(
+            output,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name="modelo-importacao-contratos.xlsx",
+        )
+    except ModuleNotFoundError:
+        output = BytesIO(build_template_csv())
+    return send_file(
+        output,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="modelo-importacao-contratos.csv",
+    )
+
+
+@contracts_bp.route("/exportar.csv")
+@login_required
+def export_contracts_csv():
+    output = BytesIO(build_contracts_csv(list_contract_rows()))
+    return send_file(
+        output,
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="contratos-cheffy.csv",
+    )
 
 
 @contracts_bp.route("/contrato/<int:contract_id>/excluir", methods=["POST"])

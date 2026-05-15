@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 from data.defaults import normalize_old_keys
+from services.dates import parse_signature_date, signature_label
 
 
 def values_from_row(row):
@@ -70,6 +71,7 @@ def contract_summary(row, now=None):
     event_at = event_datetime(values)
     payment1 = payment_date(values, 1)
     payment2 = payment_date(values, 2)
+    signed_at = parse_signature_date(values)
     return {
         "id": row["id"],
         "titulo": row["titulo"],
@@ -97,7 +99,38 @@ def contract_summary(row, now=None):
         },
         "createdAt": row["created_at"],
         "updatedAt": row["updated_at"],
+        "assinatura": {
+            "data": signed_at.date().isoformat() if signed_at else None,
+            "label": signature_label(values),
+        },
     }
+
+
+def row_for_contract_list(row):
+    values = values_from_row(row)
+    signed_at = parse_signature_date(values)
+    return {
+        "id": row["id"],
+        "titulo": row["titulo"],
+        "imagem": row["imagem"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "signature_date": signed_at,
+        "signature_label": signature_label(values),
+    }
+
+
+def sorted_contract_rows(rows):
+    contracts = [row_for_contract_list(row) for row in rows]
+    return sorted(
+        contracts,
+        key=lambda item: (
+            item["signature_date"] is not None,
+            item["signature_date"] or datetime.min,
+            item["updated_at"],
+        ),
+        reverse=True,
+    )
 
 
 def event_time_payload(row):
