@@ -8,6 +8,9 @@ const existingImage = form?.querySelector("[name='existing_image']");
 const newImage = form?.querySelector("[name='new_image']");
 const imagePreviewWrap = document.querySelector("#image-preview-wrap");
 const imagePreview = document.querySelector("#image-preview");
+const openSidebar = document.querySelector("#open-sidebar");
+const closeSidebar = document.querySelector("#close-sidebar");
+const sidebarBackdrop = document.querySelector("#sidebar-backdrop");
 const contractId = form?.querySelector("[name='contract_id']")?.value || "new";
 const draftKey = `cheffy-contract-draft-${contractId}`;
 let uploadedImageUrl = "";
@@ -188,13 +191,84 @@ function addMaterialRow() {
     materialCount.value = String(index + 1);
 }
 
+function navigableFields() {
+    return Array.from(form?.querySelectorAll("input, select, textarea, button") || [])
+        .filter((field) => {
+            if (field.type === "hidden" || field.type === "file" || field.disabled) {
+                return false;
+            }
+            if (field.tagName === "BUTTON") {
+                return false;
+            }
+            return field.offsetParent !== null;
+        });
+}
+
+function focusFieldFrom(currentField, direction) {
+    const fields = navigableFields();
+    const index = fields.indexOf(currentField);
+    if (index === -1) {
+        return;
+    }
+    const nextField = fields[index + direction];
+    if (!nextField) {
+        return;
+    }
+    nextField.focus();
+    if (typeof nextField.select === "function" && nextField.tagName !== "SELECT") {
+        nextField.select();
+    }
+}
+
+function isTextField(field) {
+    return ["INPUT", "TEXTAREA"].includes(field.tagName) && !["checkbox", "radio"].includes(field.type);
+}
+
+function cursorAtStart(field) {
+    if (!isTextField(field)) {
+        return true;
+    }
+    return field.selectionStart === 0 && field.selectionEnd === 0;
+}
+
+function cursorAtEnd(field) {
+    if (!isTextField(field)) {
+        return true;
+    }
+    const length = field.value.length;
+    return field.selectionStart === length && field.selectionEnd === length;
+}
+
+form?.addEventListener("keydown", (event) => {
+    const field = event.target;
+    if (!field.matches("input, select, textarea")) {
+        return;
+    }
+
+    if (event.key === "Enter" && field.tagName !== "TEXTAREA") {
+        event.preventDefault();
+        focusFieldFrom(field, event.shiftKey ? -1 : 1);
+        return;
+    }
+
+    if (event.key === "ArrowDown" && cursorAtEnd(field)) {
+        event.preventDefault();
+        focusFieldFrom(field, 1);
+    }
+
+    if (event.key === "ArrowUp" && cursorAtStart(field)) {
+        event.preventDefault();
+        focusFieldFrom(field, -1);
+    }
+});
+
 document.querySelector("#add-material")?.addEventListener("click", () => {
     addMaterialRow();
     renderPreview();
     saveDraft();
 });
 
-document.querySelector("#clear-draft")?.addEventListener("click", () => {
+function clearDraft() {
     const message = contractId === "new"
         ? "Limpar o rascunho deste contrato novo?"
         : "Limpar alteracoes nao salvas deste contrato e recarregar os dados salvos?";
@@ -203,7 +277,10 @@ document.querySelector("#clear-draft")?.addEventListener("click", () => {
     }
     localStorage.removeItem(draftKey);
     window.location.reload();
-});
+}
+
+document.querySelector("#clear-draft")?.addEventListener("click", clearDraft);
+document.querySelector(".mobile-clear-draft")?.addEventListener("click", clearDraft);
 
 document.querySelectorAll(".delete-contract-form").forEach((deleteForm) => {
     deleteForm.addEventListener("submit", (event) => {
@@ -212,6 +289,25 @@ document.querySelectorAll(".delete-contract-form").forEach((deleteForm) => {
             event.preventDefault();
         }
     });
+});
+
+function setSidebarOpen(isOpen) {
+    document.body.classList.toggle("sidebar-open", isOpen);
+    openSidebar?.setAttribute("aria-expanded", String(isOpen));
+}
+
+openSidebar?.addEventListener("click", () => setSidebarOpen(true));
+closeSidebar?.addEventListener("click", () => setSidebarOpen(false));
+sidebarBackdrop?.addEventListener("click", () => setSidebarOpen(false));
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        setSidebarOpen(false);
+    }
+});
+
+document.querySelectorAll(".saved-item a").forEach((link) => {
+    link.addEventListener("click", () => setSidebarOpen(false));
 });
 
 form?.addEventListener("input", () => {

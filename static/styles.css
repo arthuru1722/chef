@@ -113,6 +113,12 @@ a {
     min-width: 0;
 }
 
+.drawer-open,
+.drawer-close,
+.sidebar-backdrop {
+    display: none;
+}
+
 .sidebar,
 .preview-panel {
     position: sticky;
@@ -120,6 +126,13 @@ a {
     max-height: calc(100vh - 112px);
     overflow: auto;
     min-width: 0;
+}
+
+.sidebar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 }
 
 .saved-list {
@@ -361,6 +374,20 @@ label span {
     background: rgba(255, 255, 255, 0.64);
 }
 
+.time-group:has([name="antecedenciaHoras"]) > div {
+    grid-template-columns: repeat(2, minmax(68px, 86px)) minmax(110px, 1fr);
+}
+
+.staff-group > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(88px, 1fr));
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.64);
+}
+
 .signature-date > div {
     grid-template-columns: 72px minmax(150px, 1fr) 112px;
 }
@@ -547,24 +574,25 @@ select:focus {
 
 @media (max-width: 820px) {
     .topbar {
-        position: static;
-        display: grid;
-        grid-template-columns: 1fr;
-        align-items: flex-start;
+        position: sticky;
+        display: flex;
+        align-items: center;
         padding: 16px;
+        z-index: 20;
     }
 
     .top-actions {
-        width: 100%;
+        width: auto;
+        justify-content: flex-end;
     }
 
-    .top-actions .ghost-button,
-    .top-actions form,
-    .top-actions form .ghost-button {
-        flex: 1 1 140px;
+    .drawer-open {
+        display: inline-flex;
     }
 
-    .top-actions .primary-button {
+    .top-actions .primary-button,
+    #clear-draft,
+    .logout-form {
         display: none;
     }
 
@@ -573,21 +601,57 @@ select:focus {
         padding: 16px;
     }
 
-    .sidebar,
     .preview-panel {
         position: static;
         max-height: none;
     }
 
     .sidebar {
-        padding: 12px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.62);
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 30;
+        width: min(86vw, 360px);
+        max-height: none;
+        padding: 18px;
+        border-right: 1px solid var(--line);
+        background: #ffffff;
+        box-shadow: 24px 0 60px rgba(37, 33, 28, 0.22);
+        transform: translateX(-104%);
+        transition: transform 180ms ease;
+    }
+
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 25;
+        display: block;
+        background: rgba(37, 33, 28, 0.38);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease;
+    }
+
+    body.sidebar-open .sidebar-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    body.sidebar-open {
+        overflow: hidden;
+    }
+
+    .drawer-close {
+        display: inline-flex;
+        min-height: 32px;
+        padding: 0 10px;
     }
 
     .saved-list {
-        max-height: 46vh;
+        max-height: calc(100vh - 260px);
         overflow: auto;
         padding-right: 4px;
     }
@@ -616,12 +680,17 @@ select:focus {
 
     .mobile-save {
         display: flex;
+        flex-wrap: wrap;
         position: sticky;
         bottom: 0;
         z-index: 4;
         padding: 10px 0;
         background: rgba(244, 246, 247, 0.94);
         backdrop-filter: blur(10px);
+    }
+
+    .mobile-save > * {
+        flex: 1 1 150px;
     }
 
     .paper-preview {
@@ -644,11 +713,26 @@ select:focus {
         font-size: 21px;
     }
 
-    .top-actions .ghost-button,
-    .top-actions form,
-    .top-actions form .ghost-button {
-        flex-basis: 100%;
-        width: 100%;
+    .topbar {
+        gap: 12px;
+    }
+
+    .topbar > div:first-child {
+        min-width: 0;
+    }
+
+    .top-actions {
+        flex: 0 0 auto;
+    }
+
+    .drawer-open {
+        width: auto;
+        min-height: 36px;
+        padding: 0 10px;
+    }
+
+    .sidebar {
+        width: min(92vw, 360px);
     }
 
     .date-group > div,

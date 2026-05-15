@@ -13,6 +13,7 @@
             <h1>Contratos Cheffy</h1>
         </div>
         <div class="top-actions">
+            <button class="ghost-button drawer-open" id="open-sidebar" type="button" aria-controls="contract-sidebar" aria-expanded="false">Contratos</button>
             <a class="ghost-button" href="{{ url_for('contracts.index') }}">Novo</a>
             <button class="ghost-button" id="clear-draft" type="button">Limpar rascunho</button>
             <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}">
@@ -24,8 +25,12 @@
     </header>
 
     <main class="workspace">
-        <aside class="sidebar">
-            <h2>Salvos</h2>
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+        <aside class="sidebar" id="contract-sidebar" aria-label="Contratos salvos">
+            <div class="sidebar-head">
+                <h2>Salvos</h2>
+                <button class="ghost-button drawer-close" id="close-sidebar" type="button">Fechar</button>
+            </div>
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     <div class="inline-alert">{{ messages[0] }}</div>
@@ -147,13 +152,21 @@
                                 <div>
                                     <input name="chegadaHora" value="{{ values.get('chegadaHora', '') }}" autocomplete="off" placeholder="Hora">
                                     <input name="chegadaMinuto" value="{{ values.get('chegadaMinuto', '') }}" autocomplete="off" placeholder="Min">
+                                    <input name="antecedenciaHoras" value="{{ values.get('antecedenciaHoras', '') }}" autocomplete="off" placeholder="Antecedencia">
+                                </div>
+                            </div>
+                            <div class="input-group staff-group">
+                                <span>Equipe</span>
+                                <div>
+                                    <input name="qtdGarcons" value="{{ values.get('qtdGarcons', '') }}" autocomplete="off" placeholder="Garcons">
+                                    <input name="qtdCopeiros" value="{{ values.get('qtdCopeiros', '') }}" autocomplete="off" placeholder="Copeiros">
                                 </div>
                             </div>
                         </div>
                     {% endif %}
                     <div class="field-grid">
                         {% for key, label in fields %}
-                            {% if key not in ["diaEvento", "mesEvento", "anoEvento", "horaEvento", "minutoEvento", "inicioHora", "inicioMinuto", "terminoHora", "terminoMinuto", "chegadaHora", "chegadaMinuto", "valorTotalNumero", "valorTotalExtenso", "tipoPagamento", "valorExtraNumero", "parcela1Numero", "parcela1Extenso", "parcela1Dia", "parcela1Mes", "parcela1Ano", "parcela2Numero", "parcela2Extenso", "parcela2Dia", "parcela2Mes", "parcela2Ano", "dataFinalDia", "dataFinalMesExtenso", "dataFinalAnoUltimoDigito"] %}
+                            {% if key not in ["diaEvento", "mesEvento", "anoEvento", "horaEvento", "minutoEvento", "inicioHora", "inicioMinuto", "terminoHora", "terminoMinuto", "chegadaHora", "chegadaMinuto", "antecedenciaHoras", "qtdGarcons", "qtdCopeiros", "valorTotalNumero", "valorTotalExtenso", "tipoPagamento", "valorExtraNumero", "parcela1Numero", "parcela1Extenso", "parcela1Dia", "parcela1Mes", "parcela1Ano", "parcela2Numero", "parcela2Extenso", "parcela2Dia", "parcela2Mes", "parcela2Ano", "dataFinalDia", "dataFinalMesExtenso", "dataFinalAnoUltimoDigito"] %}
                                 <label>
                                     <span>{{ label }}</span>
                                     <input name="{{ key }}" value="{{ values.get(key, '') }}" autocomplete="off">
@@ -310,6 +323,7 @@
 
             <div class="mobile-save">
                 <button class="primary-button" type="submit">Salvar contrato</button>
+                <button class="ghost-button mobile-clear-draft" type="button">Limpar rascunho</button>
                 {% if contract_id %}
                     <a class="ghost-button" href="{{ url_for('contracts.pdf_contract', contract_id=contract_id) }}">Baixar PDF</a>
                 {% endif %}
