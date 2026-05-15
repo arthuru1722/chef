@@ -32,6 +32,10 @@
                 {% endif %}
             {% endwith %}
             <a class="export-link" href="{{ url_for('contracts.export_contracts_csv') }}">Baixar banco em CSV</a>
+            <div class="list-filters">
+                <a class="{% if not list_filter %}active{% endif %}" href="{{ url_for('contracts.index') }}">Todos</a>
+                <a class="{% if list_filter == 'open' %}active{% endif %}" href="{{ url_for('contracts.index', filter='open') }}">Nao entregues</a>
+            </div>
             <details class="import-panel">
                 <summary>Importar planilha</summary>
                 <form class="import-form" method="post" action="{{ url_for('contracts.import_contracts_route') }}" enctype="multipart/form-data">
@@ -56,7 +60,34 @@
                             {% else %}
                                 <span>Sem data de assinatura</span>
                             {% endif %}
+                            {% if contract["event_label"] %}
+                                <span>Evento: {{ contract["event_label"] }}</span>
+                            {% else %}
+                                <span>Sem data do evento</span>
+                            {% endif %}
                         </a>
+                        <div class="status-actions">
+                            <form method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="next" value="{{ request.full_path }}">
+                                <input type="hidden" name="festaRealizada" value="{{ '0' if contract['event_done'] else '1' }}">
+                                <button class="status-chip {% if contract['event_done'] %}done{% endif %}" type="submit">
+                                    {% if contract["event_done"] %}Festa feita{% else %}Festa pendente{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="next" value="{{ request.full_path }}">
+                                <input type="hidden" name="parcela1Paga" value="{{ '0' if contract['payment1_paid'] else '1' }}">
+                                <button class="status-chip {% if contract['payment1_paid'] %}done{% endif %}" type="submit">P1</button>
+                            </form>
+                            <form method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract['id']) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="next" value="{{ request.full_path }}">
+                                <input type="hidden" name="parcela2Paga" value="{{ '0' if contract['payment2_paid'] else '1' }}">
+                                <button class="status-chip {% if contract['payment2_paid'] %}done{% endif %}" type="submit">P2</button>
+                            </form>
+                        </div>
                         <form class="delete-contract-form" method="post" action="{{ url_for('contracts.delete_contract_route', contract_id=contract['id']) }}" data-contract-title="{{ contract['titulo'] }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit">Excluir</button>

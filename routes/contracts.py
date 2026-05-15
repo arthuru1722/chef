@@ -4,7 +4,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, s
 
 from config import IMAGE_DIR
 from data.fields import FIELD_GROUPS
-from database import delete_contract, get_contract, list_contract_rows, save_contract
+from database import delete_contract, get_contract, list_contract_rows, save_contract, update_contract_values
 from pdf.generator import build_contract_pdf, contract_download_name
 from services.auth import login_required, validate_csrf
 from services.contracts import sorted_contract_rows, values_from_row
@@ -38,12 +38,23 @@ def _contract_values(row):
     return values_from_row(row)
 
 
+def _safe_next(default_endpoint="contracts.index"):
+    next_url = request.form.get("next") or request.args.get("next") or url_for(default_endpoint)
+    return next_url if next_url.startswith("/") else url_for(default_endpoint)
+
+
 def _render_form(values, selected_image="", contract_id=""):
+    contracts = sorted_contract_rows(list_contract_rows())
+    list_filter = request.args.get("filter", "")
+    if list_filter == "open":
+        contracts = [contract for contract in contracts if not contract["event_done"]]
+
     return render_template(
         "index.html",
         field_groups=FIELD_GROUPS,
         values=values,
-        contracts=sorted_contract_rows(list_contract_rows()),
+        contracts=contracts,
+        list_filter=list_filter,
         images=list_image_options(),
         selected_image=normalize_image_ref(selected_image),
         contract_id=contract_id,
@@ -85,6 +96,19 @@ def save_contract_route():
     image_ref = selected_image_ref(request.form, request.files, current_ref=current_image)
     saved_id = save_contract(values, image_ref, contract_id=contract_id)
     return redirect(url_for("contracts.edit_contract", contract_id=saved_id))
+
+
+@contracts_bp.route("/contrato/<int:contract_id>/status", methods=["POST"])
+@login_required
+def update_contract_status_route(contract_id):
+    validate_csrf()
+    row = _contract_or_404(contract_id)
+    values = _contract_values(row)
+    for key in ("festaRealizada", "parcela1Paga", "parcela2Paga"):
+        if key in request.form:
+            values[key] = request.form.get(key) == "1"
+    update_contract_values(contract_id, values)
+    return redirect(_safe_next())
 
 
 @contracts_bp.route("/importar", methods=["POST"])

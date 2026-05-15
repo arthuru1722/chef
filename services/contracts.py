@@ -109,6 +109,7 @@ def contract_summary(row, now=None):
 def row_for_contract_list(row):
     values = values_from_row(row)
     signed_at = parse_signature_date(values)
+    event_at = event_datetime(values)
     return {
         "id": row["id"],
         "titulo": row["titulo"],
@@ -117,6 +118,11 @@ def row_for_contract_list(row):
         "updated_at": row["updated_at"],
         "signature_date": signed_at,
         "signature_label": signature_label(values),
+        "event_date": event_at,
+        "event_label": event_at.strftime("%d/%m/%Y %H:%M") if event_at else "",
+        "event_done": bool(values.get("festaRealizada")),
+        "payment1_paid": bool(values.get("parcela1Paga")),
+        "payment2_paid": bool(values.get("parcela2Paga")),
     }
 
 
