@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contratos salvos - Cheffy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">Contratos salvos</p>
+            <h1>Contratos</h1>
+        </div>
+        <div class="top-actions">
+            <a class="ghost-button" href="{{ url_for('contracts.index') }}">Inicio</a>
+            <a class="primary-button" href="{{ url_for('contracts.new_contract') }}">Novo contrato</a>
+        </div>
+    </header>
+
+    <main class="list-page">
+        <form class="filters-panel" method="get">
+            <label class="search-field">
+                <span>Pesquisar</span>
+                <input name="q" value="{{ filters.search }}" placeholder="Nome, evento, cidade, CPF">
+            </label>
+
+            <div class="filter-row">
+                <label>
+                    <span>Status</span>
+                    <select name="delivery">
+                        <option value="all" {% if filters.delivery == "all" %}selected{% endif %}>Todos</option>
+                        <option value="open" {% if filters.delivery == "open" %}selected{% endif %}>Nao entregues</option>
+                        <option value="done" {% if filters.delivery == "done" %}selected{% endif %}>Entregues</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Ordenar</span>
+                    <select name="order">
+                        <option value="signed_recent" {% if filters.order == "signed_recent" %}selected{% endif %}>Assinado mais recente</option>
+                        <option value="event_nearest" {% if filters.order == "event_nearest" %}selected{% endif %}>Evento mais proximo</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="filter-row">
+                <label>
+                    <span>Evento de</span>
+                    <input type="date" name="event_from" value="{{ filters.event_from_raw }}">
+                </label>
+                <label>
+                    <span>Evento ate</span>
+                    <input type="date" name="event_to" value="{{ filters.event_to_raw }}">
+                </label>
+            </div>
+
+            <div class="filter-checks">
+                <label class="checkbox-line">
+                    <input type="checkbox" name="p1_paid" value="1" {% if filters.p1_paid %}checked{% endif %}>
+                    <span>Primeira parcela paga</span>
+                </label>
+                <label class="checkbox-line">
+                    <input type="checkbox" name="p2_paid" value="1" {% if filters.p2_paid %}checked{% endif %}>
+                    <span>Segunda parcela paga</span>
+                </label>
+            </div>
+
+            <div class="filter-actions">
+                <button class="primary-button" type="submit">Filtrar</button>
+                <a class="ghost-button" href="{{ url_for('contracts.contracts_list') }}">Limpar</a>
+            </div>
+        </form>
+
+        <section class="contracts-table">
+            {% for contract in contracts %}
+                <article class="contract-card">
+                    <div>
+                        <a class="contract-title" href="{{ url_for('contracts.edit_contract', contract_id=contract.id) }}">{{ contract.titulo }}</a>
+                        <span>Assinatura: {{ contract.signature_label or "Sem data" }}</span>
+                        <span>Evento: {{ contract.event_label or "Sem data" }}</span>
+                    </div>
+                    <div>
+                        <span>Valor total</span>
+                        <strong>{{ contract.total_price or "-" }}</strong>
+                    </div>
+                    <div class="status-actions">
+                        <form class="status-form" method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract.id) }}" data-status-key="festaRealizada" data-label-on="Festa feita" data-label-off="Festa pendente">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.full_path }}">
+                            <input type="hidden" name="festaRealizada" value="{{ '0' if contract.event_done else '1' }}">
+                            <button class="status-chip {% if contract.event_done %}done{% endif %}" type="submit">{% if contract.event_done %}Festa feita{% else %}Festa pendente{% endif %}</button>
+                        </form>
+                        <form class="status-form" method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract.id) }}" data-status-key="parcela1Paga" data-label-on="P1" data-label-off="P1">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.full_path }}">
+                            <input type="hidden" name="parcela1Paga" value="{{ '0' if contract.payment1_paid else '1' }}">
+                            <button class="status-chip {% if contract.payment1_paid %}done{% endif %}" type="submit">P1</button>
+                        </form>
+                        <form class="status-form" method="post" action="{{ url_for('contracts.update_contract_status_route', contract_id=contract.id) }}" data-status-key="parcela2Paga" data-label-on="P2" data-label-off="P2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="next" value="{{ request.full_path }}">
+                            <input type="hidden" name="parcela2Paga" value="{{ '0' if contract.payment2_paid else '1' }}">
+                            <button class="status-chip {% if contract.payment2_paid %}done{% endif %}" type="submit">P2</button>
+                        </form>
+                    </div>
+                </article>
+            {% else %}
+                <p class="empty">Nenhum contrato encontrado.</p>
+            {% endfor %}
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

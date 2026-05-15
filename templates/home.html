@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contratos Cheffy</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="home-shell">
+        <section class="home-panel">
+            <p class="eyebrow">Gerador de contratos</p>
+            <h1>Contratos Cheffy</h1>
+            <div class="home-actions">
+                <a class="primary-button" href="{{ url_for('contracts.new_contract') }}">Fazer contrato novo</a>
+                <a class="ghost-button" href="{{ url_for('contracts.contracts_list') }}">Ver contratos existentes</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

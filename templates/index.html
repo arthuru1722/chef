@@ -14,7 +14,8 @@
         </div>
         <div class="top-actions">
             <button class="ghost-button drawer-open" id="open-sidebar" type="button" aria-controls="contract-sidebar" aria-expanded="false">Contratos</button>
-            <a class="ghost-button" href="{{ url_for('contracts.index') }}">Novo</a>
+            <a class="ghost-button" href="{{ url_for('contracts.index') }}">Inicio</a>
+            <a class="ghost-button" href="{{ url_for('contracts.new_contract') }}">Novo</a>
             <button class="ghost-button" id="clear-draft" type="button">Limpar rascunho</button>
             <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -38,8 +39,8 @@
             {% endwith %}
             <a class="export-link" href="{{ url_for('contracts.export_contracts_csv') }}">Baixar banco em CSV</a>
             <div class="list-filters">
-                <a class="{% if not list_filter %}active{% endif %}" href="{{ url_for('contracts.index') }}">Todos</a>
-                <a class="{% if list_filter == 'open' %}active{% endif %}" href="{{ url_for('contracts.index', filter='open') }}">Nao entregues</a>
+                <a class="{% if not list_filter %}active{% endif %}" href="{{ url_for('contracts.new_contract') }}">Todos</a>
+                <a class="{% if list_filter == 'open' %}active{% endif %}" href="{{ url_for('contracts.new_contract', filter='open') }}">Nao entregues</a>
             </div>
             <details class="import-panel">
                 <summary>Importar planilha</summary>

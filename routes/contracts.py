@@ -1,4 +1,5 @@
 from io import BytesIO
+from datetime import datetime
 
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for
 
@@ -7,7 +8,7 @@ from data.fields import FIELD_GROUPS
 from database import delete_contract, get_contract, list_contract_rows, save_contract, update_contract_values
 from pdf.generator import build_contract_pdf, contract_download_name
 from services.auth import login_required, validate_csrf
-from services.contracts import sorted_contract_rows, values_from_row
+from services.contracts import filter_contract_items, order_contract_items, row_for_contract_list, sorted_contract_rows, values_from_row
 from services.forms import empty_values, values_from_form
 from services.images import (
     list_image_options,
@@ -43,6 +44,34 @@ def _safe_next(default_endpoint="contracts.index"):
     return next_url if next_url.startswith("/") else url_for(default_endpoint)
 
 
+def _date_arg(name):
+    value = request.args.get(name, "")
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _list_filters():
+    return {
+        "delivery": request.args.get("delivery", "all"),
+        "p1_paid": request.args.get("p1_paid") == "1",
+        "p2_paid": request.args.get("p2_paid") == "1",
+        "order": request.args.get("order", "signed_recent"),
+        "search": request.args.get("q", ""),
+        "event_from": _date_arg("event_from"),
+        "event_to": _date_arg("event_to"),
+        "event_from_raw": request.args.get("event_from", ""),
+        "event_to_raw": request.args.get("event_to", ""),
+    }
+
+
+def _contract_items():
+    return [row_for_contract_list(row) for row in list_contract_rows()]
+
+
 def _render_form(values, selected_image="", contract_id=""):
     contracts = sorted_contract_rows(list_contract_rows())
     list_filter = request.args.get("filter", "")
@@ -64,7 +93,22 @@ def _render_form(values, selected_image="", contract_id=""):
 @contracts_bp.route("/")
 @login_required
 def index():
+    return render_template("home.html")
+
+
+@contracts_bp.route("/novo")
+@login_required
+def new_contract():
     return _render_form(empty_values())
+
+
+@contracts_bp.route("/contratos")
+@login_required
+def contracts_list():
+    filters = _list_filters()
+    contracts = filter_contract_items(_contract_items(), filters)
+    contracts = order_contract_items(contracts, filters["order"])
+    return render_template("contracts_list.html", contracts=contracts, filters=filters)
 
 
 @contracts_bp.route("/contrato/<int:contract_id>")
@@ -127,22 +171,22 @@ def import_contracts_route():
     spreadsheet = request.files.get("spreadsheet")
     if not spreadsheet or not spreadsheet.filename:
         flash("Escolha um arquivo .xlsx ou .csv para importar.")
-        return redirect(url_for("contracts.index"))
+        return redirect(url_for("contracts.contracts_list"))
     if not allowed_spreadsheet(spreadsheet.filename):
         flash("Formato invalido. Use .xlsx ou .csv.")
-        return redirect(url_for("contracts.index"))
+        return redirect(url_for("contracts.contracts_list"))
 
     try:
         contracts = parse_spreadsheet(spreadsheet)
     except Exception:
         flash("Nao consegui ler a planilha. Confira se a primeira linha tem os nomes das colunas.")
-        return redirect(url_for("contracts.index"))
+        return redirect(url_for("contracts.contracts_list"))
 
     for values in contracts:
         save_contract(values, image_ref="")
 
     flash(f"{len(contracts)} contrato(s) importado(s).")
-    return redirect(url_for("contracts.index"))
+    return redirect(url_for("contracts.contracts_list"))
 
 
 @contracts_bp.route("/importar/modelo")

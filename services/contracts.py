@@ -110,6 +110,19 @@ def row_for_contract_list(row):
     values = values_from_row(row)
     signed_at = parse_signature_date(values)
     event_at = event_datetime(values)
+    search_text = " ".join(
+        str(values.get(key, ""))
+        for key in (
+            "nomeContratante",
+            "tipoEvento",
+            "ruaEvento",
+            "bairroEvento",
+            "cidadeEvento",
+            "estadoEvento",
+            "cpfContratante",
+            "rgContratante",
+        )
+    ).lower()
     return {
         "id": row["id"],
         "titulo": row["titulo"],
@@ -123,6 +136,8 @@ def row_for_contract_list(row):
         "event_done": bool(values.get("festaRealizada")),
         "payment1_paid": bool(values.get("parcela1Paga")),
         "payment2_paid": bool(values.get("parcela2Paga")),
+        "total_price": values.get("valorTotalNumero", ""),
+        "search_text": search_text,
     }
 
 
@@ -130,6 +145,50 @@ def sorted_contract_rows(rows):
     contracts = [row_for_contract_list(row) for row in rows]
     return sorted(
         contracts,
+        key=lambda item: (
+            item["signature_date"] is not None,
+            item["signature_date"] or datetime.min,
+            item["updated_at"],
+        ),
+        reverse=True,
+    )
+
+
+def filter_contract_items(items, filters):
+    delivery = filters.get("delivery", "all")
+    if delivery == "open":
+        items = [item for item in items if not item["event_done"]]
+    if delivery == "done":
+        items = [item for item in items if item["event_done"]]
+
+    if filters.get("p1_paid"):
+        items = [item for item in items if item["payment1_paid"]]
+    if filters.get("p2_paid"):
+        items = [item for item in items if item["payment2_paid"]]
+
+    event_from = filters.get("event_from")
+    if event_from:
+        items = [item for item in items if item["event_date"] and item["event_date"].date() >= event_from]
+
+    event_to = filters.get("event_to")
+    if event_to:
+        items = [item for item in items if item["event_date"] and item["event_date"].date() <= event_to]
+
+    search = (filters.get("search") or "").strip().lower()
+    if search:
+        items = [item for item in items if search in item["search_text"] or search in item["titulo"].lower()]
+
+    return items
+
+
+def order_contract_items(items, order):
+    if order == "event_nearest":
+        return sorted(
+            items,
+            key=lambda item: (item["event_date"] is None, item["event_date"] or datetime.max),
+        )
+    return sorted(
+        items,
         key=lambda item: (
             item["signature_date"] is not None,
             item["signature_date"] or datetime.min,

@@ -17,6 +17,9 @@ let uploadedImageUrl = "";
 
 function getFormData() {
     const data = {};
+    if (!form) {
+        return data;
+    }
     const formData = new FormData(form);
     for (const [key, value] of formData.entries()) {
         if (key !== "new_image") {
@@ -132,11 +135,17 @@ function updateImagePreview() {
 }
 
 function saveDraft() {
+    if (!form || !draftStatus) {
+        return;
+    }
     localStorage.setItem(draftKey, JSON.stringify(getFormData()));
     draftStatus.textContent = "Rascunho salvo neste navegador";
 }
 
 function restoreDraft() {
+    if (!form) {
+        return;
+    }
     if (contractId !== "new") {
         return;
     }
@@ -174,6 +183,9 @@ function ensureMaterialRow(index) {
 }
 
 function addMaterialRow() {
+    if (!materials || !materialCount) {
+        return;
+    }
     const index = Number(materialCount.value || 0);
     const row = document.createElement("div");
     row.className = "material-row";
@@ -302,6 +314,26 @@ function setStatusButtonState(statusForm, isDone) {
     button.textContent = isDone ? statusForm.dataset.labelOn : statusForm.dataset.labelOff;
 }
 
+function applyActiveListFilters(statusForm, statusKey, isDone) {
+    const params = new URLSearchParams(window.location.search);
+    const card = statusForm.closest(".contract-card");
+    if (!card) {
+        return;
+    }
+    if (statusKey === "festaRealizada" && params.get("delivery") === "open" && isDone) {
+        card.remove();
+    }
+    if (statusKey === "festaRealizada" && params.get("delivery") === "done" && !isDone) {
+        card.remove();
+    }
+    if (statusKey === "parcela1Paga" && params.get("p1_paid") === "1" && !isDone) {
+        card.remove();
+    }
+    if (statusKey === "parcela2Paga" && params.get("p2_paid") === "1" && !isDone) {
+        card.remove();
+    }
+}
+
 document.querySelectorAll(".status-form").forEach((statusForm) => {
     statusForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -323,6 +355,7 @@ document.querySelectorAll(".status-form").forEach((statusForm) => {
             const payload = await response.json();
             const isDone = Boolean(payload.status?.[statusKey]);
             setStatusButtonState(statusForm, isDone);
+            applyActiveListFilters(statusForm, statusKey, isDone);
         } catch {
             statusForm.submit();
         } finally {
@@ -366,6 +399,8 @@ form?.addEventListener("submit", () => {
 });
 
 restoreDraft();
-renderPreview();
-updateImagePreview();
-saveDraft();
+if (form && preview) {
+    renderPreview();
+    updateImagePreview();
+    saveDraft();
+}
